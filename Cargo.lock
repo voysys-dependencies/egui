@@ -1197,6 +1197,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ecolor"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20930a432bbd57a6d55e07976089708d4893f3d556cf42a0d79e9e321fa73b10"
+dependencies = [
+ "bytemuck",
+ "cint",
+ "color-hex",
+ "serde",
+]
+
+[[package]]
 name = "eframe"
 version = "0.27.2"
 dependencies = [
@@ -1242,7 +1254,7 @@ dependencies = [
  "ahash",
  "backtrace",
  "document-features",
- "epaint",
+ "epaint 0.27.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "nohash-hasher",
  "puffin",
@@ -1257,7 +1269,7 @@ dependencies = [
  "bytemuck",
  "document-features",
  "egui",
- "epaint",
+ "epaint 0.27.2",
  "log",
  "puffin",
  "thiserror",
@@ -1403,6 +1415,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "emath"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4c3a552cfca14630702449d35f41c84a0d15963273771c6059175a803620f3f"
+dependencies = [
+ "bytemuck",
+ "mint",
+ "serde",
+]
+
+[[package]]
 name = "enum-map"
 version = "2.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1477,8 +1500,28 @@ dependencies = [
  "bytemuck",
  "criterion",
  "document-features",
- "ecolor",
- "emath",
+ "ecolor 0.27.2",
+ "emath 0.27.2",
+ "log",
+ "nohash-hasher",
+ "parking_lot",
+ "puffin",
+ "rayon",
+ "serde",
+]
+
+[[package]]
+name = "epaint"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b381f8b149657a4acf837095351839f32cd5c4aec1817fc4df84e18d76334176"
+dependencies = [
+ "ab_glyph",
+ "ahash",
+ "backtrace",
+ "bytemuck",
+ "ecolor 0.27.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "emath 0.27.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "nohash-hasher",
  "parking_lot",

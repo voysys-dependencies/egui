@@ -619,6 +619,10 @@ impl ScrollStyle {
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Interaction {
+    /// Click-only widgets accept a press and release over the same widget,
+    /// regardless of pointer travel or hold duration. Drag widgets keep their
+    /// normal behavior. Useful for tracked pointers, where motion is unavoidable.
+    pub click_on_release: bool,
     /// How close a widget must be to the mouse to have a chance to register as a click or drag.
     ///
     /// If this is larger than zero, it gets easier to hit widgets,
@@ -1044,6 +1048,7 @@ impl Default for Spacing {
 impl Default for Interaction {
     fn default() -> Self {
         Self {
+            click_on_release: false,
             resize_grab_radius_side: 5.0,
             resize_grab_radius_corner: 10.0,
             interact_radius: 5.0,
@@ -1551,6 +1556,7 @@ fn margin_ui(ui: &mut Ui, text: &str, margin: &mut Margin) {
 impl Interaction {
     pub fn ui(&mut self, ui: &mut crate::Ui) {
         let Self {
+            click_on_release,
             interact_radius,
             resize_grab_radius_side,
             resize_grab_radius_corner,
@@ -1559,6 +1565,7 @@ impl Interaction {
             selectable_labels,
             multi_widget_text_select,
         } = self;
+        ui.checkbox(click_on_release, "Click on release over the pressed widget");
         ui.add(Slider::new(interact_radius, 0.0..=20.0).text("interact_radius"))
             .on_hover_text("Interact with the closest widget within this radius.");
         ui.add(Slider::new(resize_grab_radius_side, 0.0..=20.0).text("resize_grab_radius_side"));

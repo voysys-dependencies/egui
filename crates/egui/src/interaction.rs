@@ -110,8 +110,9 @@ pub(crate) fn interact(
     prev_snapshot: &InteractionSnapshot,
     widgets: &WidgetRects,
     hits: &WidgetHits,
-    input: &InputState,
+    input: &mut InputState,
     interaction: &mut InteractionState,
+    click_on_release: bool,
 ) -> InteractionSnapshot {
     crate::profile_function!();
 
@@ -149,7 +150,9 @@ pub(crate) fn interact(
     }
 
     // Note: in the current code a press-release in the same frame is NOT considered a drag.
-    for pointer_event in &input.pointer.pointer_events {
+    let decidedly_dragging = input.pointer.is_decidedly_dragging();
+    let release_pos = input.pointer.latest_pos();
+    for pointer_event in &mut input.pointer.pointer_events {
         match pointer_event {
             PointerEvent::Moved(_) => {}
 
@@ -166,7 +169,29 @@ pub(crate) fn interact(
             }
 
             PointerEvent::Released { click, button: _ } => {
-                if click.is_some() && !input.pointer.is_decidedly_dragging() {
+                let release_widget = interaction
+                    .potential_click_id
+                    .and_then(|id| widgets.get(id));
+                let tracked_click = click_on_release
+                    && release_widget.is_some_and(|widget| {
+                        widget.enabled && widget.sense.click && !widget.sense.drag
+                    });
+                if tracked_click {
+                    if let Some(widget) = release_widget {
+                        if dragged.is_none()
+                            && hits.click.is_some_and(|hit| hit.id == widget.id)
+                            && release_pos.is_some_and(|pos| widget.interact_rect.contains(pos))
+                        {
+                            clicked = Some(widget.id);
+                            // Response::clicked and button_clicked also consume this event.
+                            click.get_or_insert_with(|| crate::input_state::Click {
+                                pos: release_pos.unwrap(),
+                                count: 1,
+                                modifiers: input.modifiers,
+                            });
+                        }
+                    }
+                } else if click.is_some() && !decidedly_dragging {
                     if let Some(widget) = interaction
                         .potential_click_id
                         .and_then(|id| widgets.get(id))
@@ -203,7 +228,16 @@ pub(crate) fn interact(
         }
     }
 
-    if !input.pointer.could_any_button_be_click() {
+    let retain_click = click_on_release
+        && dragged.is_none()
+        && interaction
+            .potential_click_id
+            .and_then(|id| widgets.get(id))
+            .is_some_and(|widget| widget.enabled && widget.sense.click && !widget.sense.drag);
+    if click_on_release && dragged.is_some() {
+        interaction.potential_click_id = None;
+    }
+    if !retain_click && !input.pointer.could_any_button_be_click() {
         interaction.potential_click_id = None;
     }
 

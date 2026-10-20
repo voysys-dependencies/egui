@@ -477,12 +477,14 @@ impl ContextImpl {
                 WidgetHits::default()
             };
 
+            let click_on_release = self.memory.options.style.interaction.click_on_release;
             viewport.interact_widgets = crate::interaction::interact(
                 &viewport.interact_widgets,
                 &viewport.widgets_prev_frame,
                 &viewport.hits,
-                &viewport.input,
+                &mut viewport.input,
                 self.memory.interaction_mut(),
+                click_on_release,
             );
         }
 
