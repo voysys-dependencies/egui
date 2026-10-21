@@ -2194,6 +2194,59 @@ impl Context {
 
     // ---------------------------------------------------------------------
 
+    /// Regions that block pointer input to content behind egui, in logical points.
+    ///
+    /// Hosts can hit-test the next pointer position against the last rendered UI
+    /// before updating other input consumers. Non-interactive areas are excluded;
+    /// the background includes panels but excludes its unused central region.
+    pub fn pointer_input_regions(&self) -> Vec<Rect> {
+        self.write(|ctx| {
+            let mut regions = Vec::new();
+            let unused_rect = ctx.viewport().frame_state.unused_rect;
+            let areas = ctx.memory.areas();
+            for layer in areas.visible_layer_ids() {
+                let Some(area) = areas.get(layer.id) else {
+                    continue;
+                };
+                if !area.interactable {
+                    continue;
+                }
+                let mut rect = area.rect();
+                if let Some(transform) = ctx.memory.layer_transforms.get(&layer) {
+                    rect = *transform * rect;
+                }
+                if layer.order != Order::Background {
+                    regions.push(rect);
+                    continue;
+                }
+                let unused = unused_rect.intersect(rect);
+                if !unused.is_positive() {
+                    regions.push(rect);
+                    continue;
+                }
+                // Split around the hole rather than using the panels' bounding
+                // box, which would also consume the empty space between them.
+                for region in [
+                    Rect::from_min_max(rect.min, pos2(rect.max.x, unused.min.y)),
+                    Rect::from_min_max(pos2(rect.min.x, unused.max.y), rect.max),
+                    Rect::from_min_max(
+                        pos2(rect.min.x, unused.min.y),
+                        pos2(unused.min.x, unused.max.y),
+                    ),
+                    Rect::from_min_max(
+                        pos2(unused.max.x, unused.min.y),
+                        pos2(rect.max.x, unused.max.y),
+                    ),
+                ] {
+                    if region.is_positive() {
+                        regions.push(region);
+                    }
+                }
+            }
+            regions
+        })
+    }
+
     /// Is the pointer (mouse/touch) over any egui area?
     pub fn is_pointer_over_area(&self) -> bool {
         let pointer_pos = self.input(|i| i.pointer.interact_pos());
